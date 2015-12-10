@@ -12,29 +12,32 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package df
 
 import (
-	_ "fmt"
-	"os"
-
-	"github.com/intelsdi-x/snap-plugin-collector-df/df"
-	"github.com/intelsdi-x/snap/control/plugin"
+	"fmt"
+	"os/exec"
 )
 
-func main() {
+var optionsKB = []string{"--no-sync", "-P", "-T"}
+var optionsINode = []string{"--no-sync", "-P", "-T", "-i"}
 
-	x := plugin.PluginConfigType{}
-	y, err := df.NewDfCollector().GetMetricTypes(x)
-	_, _ = y, err
-	/*
-		for _, mt := range y {
-			fmt.Printf("%d\t%#v\n", 0, mt.Namespace())
-		}*/
-	panic(err)
-	plugin.Start(
-		df.Meta(),
-		df.NewDfCollector(),
-		os.Args[1],
-	)
+func runDf() (kBOutput, iNodeOutput string, err error) {
+	kBOutputB, erri := exec.Command("df", optionsKB...).Output()
+	if erri != nil {
+		err = fmt.Errorf("df run for kB output failed: %v", erri)
+		return
+	}
+	kBOutput = string(kBOutputB)
+
+	iNodeOutputB, erri := exec.Command("df", optionsINode...).Output()
+	if erri != nil {
+		err = fmt.Errorf("df run for inodes output failed: %v", erri)
+		return
+	}
+	iNodeOutput = string(iNodeOutputB)
+
+	err = nil
+
+	return
 }
